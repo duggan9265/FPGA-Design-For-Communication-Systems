@@ -1,0 +1,14 @@
+# Compile of counter.vhd was successful.
+# Compile of tcounter.vhd was successful.
+# 2 compiles, 0 failed with no errors.
+vsim work.test_counter
+# vsim work.test_counter 
+# Start time: 14:59:29 on Feb 12,2025
+# Loading std.standard
+# Loading work.test_counter(only)
+# Loading work.counter(only)
+end -sim
+# bad option "-sim": must be blank, cget, configure, copy, data, get, put, read, redither, transparency, or write
+quit -sim
+# End time: 14:59:57 on Feb 12,2025, Elapsed time: 0:00:28
+# Errors: 0, Warnings: 5

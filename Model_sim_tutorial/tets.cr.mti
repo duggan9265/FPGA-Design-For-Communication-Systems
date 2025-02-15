@@ -1,0 +1,13 @@
+C:/Users/DanielDuggan/Documents/FPGA_Design_Comm_System/Model_sim_tutorial/counter/tcounter.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/Users/DanielDuggan/Documents/FPGA_Design_Comm_System/Model_sim_tutorial/counter/tcounter.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 2020.1 Compiler 2020.02 Feb 28 2020
+-- Loading package STANDARD
+-- Compiling entity test_counter
+-- Compiling architecture only of test_counter
+
+} {} {}} C:/Users/DanielDuggan/Documents/FPGA_Design_Comm_System/Model_sim_tutorial/counter/counter.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/Users/DanielDuggan/Documents/FPGA_Design_Comm_System/Model_sim_tutorial/counter/counter.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 2020.1 Compiler 2020.02 Feb 28 2020
+-- Loading package STANDARD
+-- Compiling entity counter
+-- Compiling architecture only of counter
+
+} {} {}}
