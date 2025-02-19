@@ -1,0 +1,61 @@
+(Slide 5): 
+
+Gate Level Simulation- Not usually done, but if have poor coding style, software bugs, may mis interpret the wanted design.
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+(Slide  8): 
+
+	Entity-
+		Architecture
+			Process
+
+Component is an entity inside another entity
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+(Slide 11):
+
+Order of signal assignments inside processes does not matter as RHS is computed first, and then assigned to LHS.
+
+It is the clock that instantiates a the flip flop.
+
+IF had inside a process had D<=2, D<=3, this is ok, but D>=3 wins. In concurrent statement raises an error as makes a short circuit essentially.
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+(Slide 14):
+
+With variables, the order matters!
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+(Slide 20):
+
+
+If leave out Sel, it will not be updated ad circuit (in simulation will be wrong). In hardware may still work.
+
+If don't assign output to all possible cases, will result a latch. This will give warning.
+
+99% of cases latches are unwanted.
+
+Can have defaults i.e. F<=W before BEGIN
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+Clock Domain Crossing:
+
+Need to sync pointers, do this using grey coding.
+
+
+
+
+
+
+
+
+
+
+
+
+
