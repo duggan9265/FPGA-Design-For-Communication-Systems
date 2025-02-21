@@ -1,4 +1,5 @@
 -- vhdl-linter-disable type-resolved
+-- CRC value is stored in the FCS field
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
@@ -10,8 +11,8 @@ GENERIC(
 PORT (
     CLK : IN STD_LOGIC; --Sys Clock 
     RST : IN STD_LOGIC; --Async Reset 
-    START_OF_FRAME : IN STD_LOGIC; --Arrival of first bit 
-    END_OF_FRAME : IN STD_LOGIC; --Arrival of 1st bit in FCS 
+    START_OF_FRAME : IN STD_LOGIC; --Arrival of first bit of Ethernet Frame
+    END_OF_FRAME : IN STD_LOGIC; --Arrival of the first bit of FCS.
     DATA_IN : IN STD_LOGIC; --serial input data 
     FCS_ERROR : OUT STD_LOGIC --indicates an error 
 );
