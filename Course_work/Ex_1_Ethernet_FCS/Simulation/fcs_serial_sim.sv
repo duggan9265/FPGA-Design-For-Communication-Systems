@@ -73,6 +73,6 @@ endtask
         #10ns //wait tell ns
 
         rst = 1'b1; //not in reset now        
-    end
+    end 
     
 
