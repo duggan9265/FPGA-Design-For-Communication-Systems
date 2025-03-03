@@ -25,7 +25,7 @@ ARCHITECTURE rtl OF sys_top IS
     
 BEGIN
     -- Convert the differential clock to single-ended using IBUFDS
-    clk_buffer: entity work.IBUFDS -- vhdl-linter-disable-line not-declared
+    clk_buffer: IBUFDS -- don't use work as this is not a user defined entity -- vhdl-linter-disable-line not-declared
     PORT MAP (
         I  => SYS_CLOCK_P,  -- Positive clock input
         IB => SYS_CLOCK_N,  -- Negative clock input
