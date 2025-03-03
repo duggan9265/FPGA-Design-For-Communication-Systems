@@ -3,7 +3,7 @@ LIBRARY IEEE;
 USE ieee.numeric_std.ALL;
 USE ieee.std_logic_1164.ALL;
 
-ENTITY fsm_fcs IS
+ENTITY fcs_check_serial IS --fsm_fcs
     GENERIC (
         Depth : INTEGER := 32
     );
@@ -18,12 +18,13 @@ ENTITY fsm_fcs IS
     );
 END ENTITY;
 
-ARCHITECTURE fsm OF fsm_fcs IS
+ARCHITECTURE fsm OF fcs_check_serial IS
     TYPE fsm_fcs_type IS
     (idle, data_recieve, fcs_recieve, check_fcs, error_check);
-    SIGNAL state, next_state : fsm_fcs_type;
-    SIGNAL bit_count : unsigned(5 DOWNTO 0);
+    SIGNAL state, next_state : fsm_fcs_type; --state, next_state can take on all values inside fsm_fcs_type
+    SIGNAL bit_count : unsigned(9 DOWNTO 0);
     SIGNAL shift_mem : STD_LOGIC_VECTOR(DEPTH - 1 DOWNTO 0);
+    SIGNAL check_data : STD_LOGIC; -- For debug purposes only
 BEGIN
     fsm_process : PROCESS (state, START_OF_FRAME, END_OF_FRAME, bit_count)
     BEGIN
@@ -43,7 +44,7 @@ BEGIN
                 END IF;
 
             WHEN fcs_recieve =>
-                IF bit_count = 31 THEN
+                IF bit_count = 511 THEN
                     next_state <= check_fcs;
                 ELSE
                     next_state <= fcs_recieve;
@@ -77,7 +78,8 @@ BEGIN
                     FCS_ERROR <= '0';
 
                 WHEN data_recieve =>
-                    IF bit_count < 31 THEN
+                    check_data <= NOT DATA_IN;
+                    IF bit_count < 32 THEN
                         shift_mem(0) <= shift_mem(31) XOR (NOT(DATA_IN)); -- Complement first 32 bits
                         shift_mem(1) <= shift_mem(0) XOR shift_mem(31);
                         shift_mem(2) <= shift_mem(1) XOR shift_mem(31);
@@ -101,7 +103,7 @@ BEGIN
                         shift_mem(20) <= shift_mem(19);
                         shift_mem(21) <= shift_mem(20);
                         shift_mem(22) <= shift_mem(21) XOR shift_mem(31);
-                        shift_mem(23) <= shift_mem(22);
+                        shift_mem(23) <= shift_mem(22) XOR shift_mem(31);
                         shift_mem(24) <= shift_mem(23);
                         shift_mem(25) <= shift_mem(24);
                         shift_mem(26) <= shift_mem(25) XOR shift_mem(31);
@@ -135,7 +137,7 @@ BEGIN
                         shift_mem(20) <= shift_mem(19);
                         shift_mem(21) <= shift_mem(20);
                         shift_mem(22) <= shift_mem(21) XOR shift_mem(31);
-                        shift_mem(23) <= shift_mem(22);
+                        shift_mem(23) <= shift_mem(22) XOR shift_mem(31);
                         shift_mem(24) <= shift_mem(23);
                         shift_mem(25) <= shift_mem(24);
                         shift_mem(26) <= shift_mem(25) XOR shift_mem(31);
@@ -148,42 +150,82 @@ BEGIN
                     bit_count <= bit_count + 1;
 
                 WHEN fcs_recieve =>
-                    bit_count <= bit_count + 1;
-                    shift_mem(0) <= shift_mem(31) XOR (NOT(DATA_IN)); -- Complement bits
-                    shift_mem(1) <= shift_mem(0) XOR shift_mem(31);
-                    shift_mem(2) <= shift_mem(1) XOR shift_mem(31);
-                    shift_mem(3) <= shift_mem(2);
-                    shift_mem(4) <= shift_mem(3) XOR shift_mem(31);
-                    shift_mem(5) <= shift_mem(4) XOR shift_mem(31);
-                    shift_mem(6) <= shift_mem(5);
-                    shift_mem(7) <= shift_mem(6) XOR shift_mem(31);
-                    shift_mem(8) <= shift_mem(7) XOR shift_mem(31);
-                    shift_mem(9) <= shift_mem(8);
-                    shift_mem(10) <= shift_mem(9) XOR shift_mem(31);
-                    shift_mem(11) <= shift_mem(10) XOR shift_mem(31);
-                    shift_mem(12) <= shift_mem(11) XOR shift_mem(31);
-                    shift_mem(13) <= shift_mem(12);
-                    shift_mem(14) <= shift_mem(13);
-                    shift_mem(15) <= shift_mem(14);
-                    shift_mem(16) <= shift_mem(15) XOR shift_mem(31);
-                    shift_mem(17) <= shift_mem(16);
-                    shift_mem(18) <= shift_mem(17);
-                    shift_mem(19) <= shift_mem(18);
-                    shift_mem(20) <= shift_mem(19);
-                    shift_mem(21) <= shift_mem(20);
-                    shift_mem(22) <= shift_mem(21) XOR shift_mem(31);
-                    shift_mem(23) <= shift_mem(22);
-                    shift_mem(24) <= shift_mem(23);
-                    shift_mem(25) <= shift_mem(24);
-                    shift_mem(26) <= shift_mem(25) XOR shift_mem(31);
-                    shift_mem(27) <= shift_mem(26);
-                    shift_mem(28) <= shift_mem(27);
-                    shift_mem(29) <= shift_mem(28);
-                    shift_mem(30) <= shift_mem(29);
-                    shift_mem(31) <= shift_mem(30);
-                
+                        
+                        IF bit_count > 479 THEN
+                        check_data <= NOT DATA_IN;
+                        bit_count <= bit_count + 1;
+                        shift_mem(0) <= shift_mem(31) XOR (NOT(DATA_IN)); -- Complement bits
+                        shift_mem(1) <= shift_mem(0) XOR shift_mem(31);
+                        shift_mem(2) <= shift_mem(1) XOR shift_mem(31);
+                        shift_mem(3) <= shift_mem(2);
+                        shift_mem(4) <= shift_mem(3) XOR shift_mem(31);
+                        shift_mem(5) <= shift_mem(4) XOR shift_mem(31);
+                        shift_mem(6) <= shift_mem(5);
+                        shift_mem(7) <= shift_mem(6) XOR shift_mem(31);
+                        shift_mem(8) <= shift_mem(7) XOR shift_mem(31);
+                        shift_mem(9) <= shift_mem(8);
+                        shift_mem(10) <= shift_mem(9) XOR shift_mem(31);
+                        shift_mem(11) <= shift_mem(10) XOR shift_mem(31);
+                        shift_mem(12) <= shift_mem(11) XOR shift_mem(31);
+                        shift_mem(13) <= shift_mem(12);
+                        shift_mem(14) <= shift_mem(13);
+                        shift_mem(15) <= shift_mem(14);
+                        shift_mem(16) <= shift_mem(15) XOR shift_mem(31);
+                        shift_mem(17) <= shift_mem(16);
+                        shift_mem(18) <= shift_mem(17);
+                        shift_mem(19) <= shift_mem(18);
+                        shift_mem(20) <= shift_mem(19);
+                        shift_mem(21) <= shift_mem(20);
+                        shift_mem(22) <= shift_mem(21) XOR shift_mem(31);
+                        shift_mem(23) <= shift_mem(22) XOR shift_mem(31);
+                        shift_mem(24) <= shift_mem(23);
+                        shift_mem(25) <= shift_mem(24);
+                        shift_mem(26) <= shift_mem(25) XOR shift_mem(31);
+                        shift_mem(27) <= shift_mem(26);
+                        shift_mem(28) <= shift_mem(27);
+                        shift_mem(29) <= shift_mem(28);
+                        shift_mem(30) <= shift_mem(29);
+                        shift_mem(31) <= shift_mem(30);
+
+                        else
+                        check_data <= DATA_IN;
+                        bit_count <= bit_count + 1;
+                        shift_mem(0) <= shift_mem(31) XOR DATA_IN; -- Complement bits
+                        shift_mem(1) <= shift_mem(0) XOR shift_mem(31);
+                        shift_mem(2) <= shift_mem(1) XOR shift_mem(31);
+                        shift_mem(3) <= shift_mem(2);
+                        shift_mem(4) <= shift_mem(3) XOR shift_mem(31);
+                        shift_mem(5) <= shift_mem(4) XOR shift_mem(31);
+                        shift_mem(6) <= shift_mem(5);
+                        shift_mem(7) <= shift_mem(6) XOR shift_mem(31);
+                        shift_mem(8) <= shift_mem(7) XOR shift_mem(31);
+                        shift_mem(9) <= shift_mem(8);
+                        shift_mem(10) <= shift_mem(9) XOR shift_mem(31);
+                        shift_mem(11) <= shift_mem(10) XOR shift_mem(31);
+                        shift_mem(12) <= shift_mem(11) XOR shift_mem(31);
+                        shift_mem(13) <= shift_mem(12);
+                        shift_mem(14) <= shift_mem(13);
+                        shift_mem(15) <= shift_mem(14);
+                        shift_mem(16) <= shift_mem(15) XOR shift_mem(31);
+                        shift_mem(17) <= shift_mem(16);
+                        shift_mem(18) <= shift_mem(17);
+                        shift_mem(19) <= shift_mem(18);
+                        shift_mem(20) <= shift_mem(19);
+                        shift_mem(21) <= shift_mem(20);
+                        shift_mem(22) <= shift_mem(21) XOR shift_mem(31);
+                        shift_mem(23) <= shift_mem(22) XOR shift_mem(31);
+                        shift_mem(24) <= shift_mem(23);
+                        shift_mem(25) <= shift_mem(24);
+                        shift_mem(26) <= shift_mem(25) XOR shift_mem(31);
+                        shift_mem(27) <= shift_mem(26);
+                        shift_mem(28) <= shift_mem(27);
+                        shift_mem(29) <= shift_mem(28);
+                        shift_mem(30) <= shift_mem(29);
+                        shift_mem(31) <= shift_mem(30);
+                        END IF;
+            
                 WHEN CHECK_FCS =>
-                    IF shift_mem = (OTHERS => '0') THEN
+                    IF shift_mem = (shift_mem'RANGE => '0') THEN
                         FCS_ERROR <= '0';
                     ELSE
                         FCS_ERROR <= '1';
