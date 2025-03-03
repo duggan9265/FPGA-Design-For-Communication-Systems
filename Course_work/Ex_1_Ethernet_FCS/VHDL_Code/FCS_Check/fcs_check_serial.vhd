@@ -1,10 +1,12 @@
 -- Author: Daniel Duggan
 -- vhdl-linter-disable type-resolved
+-- CRC value is stored in the FCS field
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 
 ENTITY fcs_check_serial IS
+
     GENERIC (
         DEPTH : INTEGER := 32
     );
@@ -16,6 +18,7 @@ ENTITY fcs_check_serial IS
         DATA_IN : IN STD_LOGIC; --serial input data 
         FCS_ERROR : OUT STD_LOGIC --indicates an error 
     );
+
 END fcs_check_serial;
 
 ARCHITECTURE rtl OF fcs_check_serial IS
