@@ -8,19 +8,19 @@ USE IEEE.NUMERIC_STD.ALL;
 LIBRARY UNISIM;
 USE UNISIM.VCOMPONENTS.ALL; -- Required for IBUFDS -- vhdl-linter-disable-line not-declared
 
-ENTITY sys_top IS
+ENTITY Sys_Top_para IS
     PORT(
         SYS_CLOCK_P : IN STD_LOGIC;  -- LVDS clock positive
         SYS_CLOCK_N : IN STD_LOGIC;  -- LVDS clock negative
         RST : IN STD_LOGIC;
         START_OF_FRAME_top : IN STD_LOGIC;
         END_OF_FRAME_top : IN STD_LOGIC;
-        DATA_IN_top : IN STD_LOGIC;
+        DATA_IN_top : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
         FCS_ERROR_top : OUT STD_LOGIC -- vhdl-linter-disable-line type-resolved
     );
-END sys_top;
+END Sys_Top_para;
 
-ARCHITECTURE rtl OF sys_top IS
+ARCHITECTURE rtl OF sys_top_para IS
     -- Single-ended clock signal after differential conversion
     SIGNAL sysclk_single : STD_LOGIC; -- vhdl-linter-disable-line type-resolved
     
@@ -34,7 +34,7 @@ BEGIN
     );
 
     -- Instance of fcs_check_serial using the single-ended clock
-    fcs_serial_FSM_inst: entity work.fcs_check_serial
+    fcs_parallel_FSM_inst: entity work.fcs_check_parallel_FSM
     PORT MAP (
         CLK => sysclk_single,  -- Send the converted clock
         RST => RST,
