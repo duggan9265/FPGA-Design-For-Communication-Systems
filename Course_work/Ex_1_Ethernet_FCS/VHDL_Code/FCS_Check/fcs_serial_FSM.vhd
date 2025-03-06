@@ -1,3 +1,4 @@
+-- Auther Daniel Duggan
 -- vhdl-linter-disable type-resolved
 LIBRARY IEEE;
 USE ieee.numeric_std.ALL;
@@ -190,7 +191,7 @@ BEGIN
                         else
                         check_data <= DATA_IN;
                         bit_count <= bit_count + 1;
-                        shift_mem(0) <= shift_mem(31) XOR DATA_IN; -- Complement bits
+                        shift_mem(0) <= shift_mem(31) XOR DATA_IN; 
                         shift_mem(1) <= shift_mem(0) XOR shift_mem(31);
                         shift_mem(2) <= shift_mem(1) XOR shift_mem(31);
                         shift_mem(3) <= shift_mem(2);

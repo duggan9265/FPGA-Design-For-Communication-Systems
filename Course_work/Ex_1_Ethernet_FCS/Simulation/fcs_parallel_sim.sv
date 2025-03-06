@@ -1,6 +1,6 @@
 //Author Daniel Duggan
 
-module FCS_serial;
+module FCS_para;
 
   timeunit 1ns;
   timeprecision 1ps; //time precision specifies how delay values are rounded relative to timeunit
@@ -8,9 +8,9 @@ module FCS_serial;
   logic sysclk_p;
   logic sysclk_n;
   logic rst; //reset logic
-  logic start_of_frame_top, end_of_frame_top, data_in, fcs_error_top;
+  logic start_of_frame_top, end_of_frame_top, fcs_error_top;
+  logic [7:0] data_in;
   parameter clk_period = 4ns; // Since sys_clock every 2ns
-
 
   // clock generation -------------------------------------------------------------------
   logic sys_clk = 0;
@@ -21,23 +21,23 @@ module FCS_serial;
 
   // Data in (Ethernet Frame) ---------------------------------------------------------------
   logic [511:0] ethernet_frame = {
-    128'h00_10_A4_7B_EA_80_00_12_34_56_78_90_08_00_45_00,
-    128'h00_2E_B3_FE_00_00_80_11_05_40_C0_A8_00_2C_C0_A8,
-    128'h00_04_04_00_04_00_00_1A_2D_E8_00_01_02_03_04_05,
-    128'h06_07_08_09_0A_0B_0C_0D_0E_0F_10_11_E6_C5_3D_B2
-  };
-  
-    logic [511:0] ethernet_frame_incorrect = {
-      128'h00_10_A4_7B_EA_80_00_12_34_56_78_90_08_00_45_00,
-      128'h00_2E_B3_FE_00_00_80_11_05_40_C0_A8_00_2C_C0_A8,
-      128'h00_04_04_00_04_00_00_1A_2D_E8_00_01_02_03_04_05,
-      128'h06_07_08_09_0A_0B_0C_0D_0E_0F_10_11_FF_FF_FF_FF
-    };
-  
+          128'h00_10_A4_7B_EA_80_00_12_34_56_78_90_08_00_45_00,
+          128'h00_2E_B3_FE_00_00_80_11_05_40_C0_A8_00_2C_C0_A8,
+          128'h00_04_04_00_04_00_00_1A_2D_E8_00_01_02_03_04_05,
+          128'h06_07_08_09_0A_0B_0C_0D_0E_0F_10_11_E6_C5_3D_B2
+        };
+
+  logic [511:0] ethernet_frame_incorrect = {
+          128'h00_10_A4_7B_EA_80_00_12_34_56_78_90_08_00_45_00,
+          128'h00_2E_B3_FE_00_00_80_11_05_40_C0_A8_00_2C_C0_A8,
+          128'h00_04_04_00_04_00_00_1A_2D_E8_00_01_02_03_04_05,
+          128'h06_07_08_09_0A_0B_0C_0D_0E_0F_10_11_FF_FF_FF_FF
+        };
+
   //--------------------------------------------------------------------------------------
 
   // DUT ----------------------------------------------------------------------------------
-  Sys_top Sys_top_DUT(
+  Sys_Top_para Sys_Top_para_DUT(
             .SYS_CLOCK_P (sysclk_p),
             .SYS_CLOCK_N (sysclk_n),
             .RST (rst),
@@ -62,26 +62,27 @@ module FCS_serial;
     repeat (5) @(posedge sys_clk);
 
     // Begin Transmission
-    start_of_frame_top = 1'b1;  // Indicate start of frame
-    @(posedge sys_clk);//#posedge sys_clk;
-    start_of_frame_top = 1'b0;
-    
-    for (int i = 511; i >= 0; i--)
+
+    @(posedge sys_clk);
+    start_of_frame_top = 1'b1;  // Assert start_of_frame_top one cycle before the first byte
+
+    for (int i = ($bits(ethernet_frame)/8) - 1; i >= 0; i--)
     begin
-      //#1;
-      data_in = ethernet_frame[i];  // Send data in serially
-      /// Set end_of_frame at the last bit
-      if (i == 32) //31 should go high at bit 480? Does at 481. Why?
+      @(posedge sys_clk);
+      start_of_frame_top = 1'b0;  // Deassert start_of_frame_top after the first cycle
+
+      data_in = ethernet_frame[((i+1)*8 - 1) -: 8];  // Send data in bytes
+
+      if (i == 3) // Indicate the last 3 bytes
         end_of_frame_top = 1'b1;
       else
-        end_of_frame_top = 1'b0; 
-      @(posedge sys_clk); //#clk_period;
-      
+        end_of_frame_top = 1'b0;
     end
+
+    @(posedge sys_clk);
+    end_of_frame_top = 1'b0;  // Deassert end_of_frame_top after the last byte
 
     repeat (3) @(posedge sys_clk);
     $finish;
   end
 endmodule
-
-
