@@ -48,13 +48,14 @@ begin
                     write_enable_sig <= (others => '0');
 
                end if;
+               WPTR <= wr_ptr_grey_code; -- WPTR is now in grey code. Sent to write_pointer_sync for sync
             end if;
     end process;
 
     full_sig <= '1' when (wr_ptr_sig - RPTR_SYNC = 16) else '0';
 
 
-    WPTR <= wr_ptr_grey_code; -- WPTR is now in grey code. Sent to write_pointer_sync for sync
+    --WPTR <= wr_ptr_grey_code; -- WPTR is now in grey code. Sent to write_pointer_sync for sync
     FULL <= full_sig;
     WADDR <= (wr_ptr_sig(3 downto 0)); -- sent to the Dual-port memory
     WEN <= write_enable_sig; --sent to the Dual-port memory

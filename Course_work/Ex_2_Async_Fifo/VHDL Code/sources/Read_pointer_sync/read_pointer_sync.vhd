@@ -23,6 +23,8 @@ begin
     begin
         if RST = '0' then
             READ_POINTER_SYNC <= (others => '0');
+            rptr_ff_1 <= (others => '0');
+            rptr_ff_1 <= (others => '0');
         
             elsif rising_edge(WCLK) then
 
@@ -37,6 +39,7 @@ begin
             grey2binary(1) <= rptr_ff_2(1) xor rptr_ff_2(2);
             grey2binary(0) <= rptr_ff_2(0) xor rptr_ff_2(1);
         end if;
+        READ_POINTER_SYNC <= grey2binary; -- Needs to be inside process so it happens on rising_edge of clock!
     end process;
-    READ_POINTER_SYNC <= grey2binary;
+   -- READ_POINTER_SYNC <= grey2binary;
 end architecture rtl;

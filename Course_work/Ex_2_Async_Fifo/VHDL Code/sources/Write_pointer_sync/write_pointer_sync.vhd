@@ -15,6 +15,7 @@ entity write_pointer_sync is
 end entity;
 
 architecture rtl of write_pointer_sync is
+    signal wptr_ff_0  : unsigned(4 downto 0);
     signal wptr_ff_1 : unsigned(4 downto 0);
     signal wptr_ff_2 : unsigned(4 downto 0);
     signal grey2binary : unsigned(4 downto 0);
@@ -25,9 +26,14 @@ begin
     begin
         if rst = '0' then
             WRITE_POINTER_SYNC <= (others => '0');
+            wptr_ff_0 <= (others => '0');
+            wptr_ff_1 <= (others => '0');
+            wptr_ff_2 <= (others => '0');
+
         
         elsif rising_edge(RCLK) then
-            wptr_ff_1 <= WPTR;
+            wptr_ff_0 <= WPTR;
+            wptr_ff_1 <= wptr_ff_0;
             wptr_ff_2 <= wptr_ff_1;
 
             -- Grey code to binary code
@@ -36,7 +42,8 @@ begin
             grey2binary(2) <= wptr_ff_2(2) xor wptr_ff_2(3);
             grey2binary(1) <= wptr_ff_2(1) xor wptr_ff_2(2);
             grey2binary(0) <= wptr_ff_2(0) xor wptr_ff_2(1);
-        end if;        
+        end if; 
+        WRITE_POINTER_SYNC <= grey2binary;       
     end process;
-    WRITE_POINTER_SYNC <= grey2binary;
+    
 end architecture rtl;
