@@ -27,39 +27,36 @@ architecture rtl of FIFO_READ_CONTROL is
 
 begin
 
-    fsm_process : process (RCLK) --asyn reset
+    FIFO_read_control_process : process (RCLK) --asyn reset
     begin
-        if rising_edge(RCLK) then
-            if RST = '0' then --reset active low
-                --RPTR <= (others => '0');
-                --rd_ptr_grey_code <= (others => '0');
+        if RST = '0' then --reset active low
+            --RPTR <= (others => '0');
+            --rd_ptr_grey_code <= (others => '0');
+            rd_ptr_sig <= (others => '0');
+
+        elsif rising_edge(RCLK) then
+
+            rd_ptr_grey_code(4) <= rd_ptr_sig(4); -- Binary code to grey code
+            rd_ptr_grey_code(3) <= rd_ptr_sig(4) xor (rd_ptr_sig(3));
+            rd_ptr_grey_code(2) <= rd_ptr_sig(3) xor (rd_ptr_sig(2));
+            rd_ptr_grey_code(1) <= rd_ptr_sig(2) xor (rd_ptr_sig(1));
+            rd_ptr_grey_code(0) <= rd_ptr_sig(1) xor (rd_ptr_sig(0));
+            if READ_ENABLE(0) = '1' and empty_sig = '0' then --don't write to full memory
+                rd_ptr_sig <= rd_ptr_sig + 1;
+                rd_enable_out <= '1';
+            elsif rd_ptr_sig = 31 then
                 rd_ptr_sig <= (others => '0');
+            end if;
 
-            else
-
-                rd_ptr_grey_code(4) <= rd_ptr_sig(4); -- Binary code to grey code
-                rd_ptr_grey_code(3) <= rd_ptr_sig(4) xor (rd_ptr_sig(3));
-                rd_ptr_grey_code(2) <= rd_ptr_sig(3) xor (rd_ptr_sig(2));
-                rd_ptr_grey_code(1) <= rd_ptr_sig(2) xor (rd_ptr_sig(1));
-                rd_ptr_grey_code(0) <= rd_ptr_sig(1) xor (rd_ptr_sig(0));
-                
-
-                if READ_ENABLE(0) = '1' and empty_sig = '0' then --don't write to full memory
-                    rd_ptr_sig <= rd_ptr_sig + 1;
-                    rd_enable_out <= '1';
-                elsif rd_ptr_sig = 31 then
-                    rd_ptr_sig <= (others => '0');
-                end if;
-
-                if rd_ptr_sig(3 downto 0) = WPTR_SYNC(3 downto 0) then -- raddr=waddr
-                    if rd_ptr_sig(4) = WPTR_SYNC(4) then
-                        EMPTY_sig <= '1'; -- FIFO is empty when read and write pointers MSB's are equal
-                    else
-                        EMPTY_sig <= '0'; -- FIFO is not empty
-                    end if;
+            if rd_ptr_sig(3 downto 0) = WPTR_SYNC(3 downto 0) then -- raddr=waddr
+                if rd_ptr_sig(4) = WPTR_SYNC(4) then
+                    EMPTY_sig <= '1'; -- FIFO is empty when read and write pointers MSB's are equal
+                else
+                    EMPTY_sig <= '0'; -- FIFO is not empty
                 end if;
             end if;
         end if;
+
     end process;
     RADDR <= (rd_ptr_sig(3 downto 0));
     RPTR <= rd_ptr_grey_code; -- RPTR is now in grey code.

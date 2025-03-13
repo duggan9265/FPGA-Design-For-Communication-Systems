@@ -27,14 +27,15 @@ architecture rtl of FIFO_WRITE_CONTROL is
 
 begin
 
-    fsm_process : process (WCLK) --asyn reset
+    write_control_process : process (WCLK,RST) --asyn reset
     begin
-        if rising_edge(WCLK) then
             if RST = '0' then --reset active low
                 --WPTR <= (others => '0');
                 wr_ptr_grey_code <= (others => '0');
                 -- wr_ptr_sig <= (others => '0');
-            else
+            
+            elsif rising_edge(WCLK) then
+
                 wr_ptr_grey_code(4) <= wr_ptr_sig(4); -- Binary code to grey code
                 wr_ptr_grey_code(3) <= wr_ptr_sig(4) xor (wr_ptr_sig(3));
                 wr_ptr_grey_code(2) <= wr_ptr_sig(3) xor (wr_ptr_sig(2));
@@ -59,7 +60,6 @@ begin
                     end if;
                 end if;
             end if;
-        end if;
     end process;
     WPTR <= wr_ptr_grey_code; -- WPTR is now in grey code. Sent to write_pointer_sync for sync
     FULL <= full_sig;
