@@ -1,46 +1,111 @@
--- vhdl-linter-disable type-resolved component
+-- vhdl-linter-disable type-resolved component. component
 library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-LIBRARY blk_mem_gen_v8_4_7;
-USE blk_mem_gen_v8_4_7.blk_mem_gen_v8_4_7;
+-- LIBRARY blk_mem_gen_v8_4_7;
+-- USE blk_mem_gen_v8_4_7.blk_mem_gen_v8_4_7;
 
 entity Async_FIFO is
     port (
-        RST : in std_logic;
-        WCLK : in std_logic;
-        RCLK : in std_logic;
-        WRITE_ENABLE : in std_logic;
-        READ_ENABLE : in std_logic;
+        RST_top : in std_logic;
+        WCLK_top : in std_logic;
+        RCLK_top : in std_logic;
+        WRITE_ENABLE_TOP : in std_logic_vector(0 downto 0);
+        READ_ENABLE_TOP : in std_logic_vector(0 downto 0);
+        FULL_top : out std_logic; --output if memory is full
+        EMPTY_top : out std_logic; -- output if memory is empty
         FIFO_OCCU_IN : out std_logic_vector(4 downto 0);
         FIFO_OCCU_OUT : out std_logic_vector(4 downto 0);
-        WRITE_DATA_IN : in std_logic_vector(7 downto 0);
-        WRITE_DATA_OUT : out std_logic_vector(7 downto 0)
+        WRITE_DATA_IN_top : in std_logic_vector(7 downto 0);
+        WRITE_DATA_OUT_top : out std_logic_vector(7 downto 0)
     );
 end entity;
 
 architecture rtl of Async_FIFO is
+
+    -- Declare the component
+    COMPONENT blk_mem_gen_0
+        PORT (
+            clka   : IN std_logic;
+            wea    : IN std_logic_vector(0 DOWNTO 0);
+            addra  : IN std_logic_vector(3 DOWNTO 0);
+            dina   : IN std_logic_vector(7 DOWNTO 0);
+            clkb   : IN std_logic;
+            enb    : IN std_logic;
+            addrb  : IN std_logic_vector(3 DOWNTO 0);
+            doutb  : OUT std_logic_vector(7 DOWNTO 0)
+        );
+    END COMPONENT;
     
     -- FIFO_WRITE_CONTROL SIGNALS.
-    signal wen : std_logic_vector(0 downto 0); -- write enable from FIFO_WRITE_Control
-    signal waddr : std_logic_vector(3 downto 0); --write address from FIFO_WRITE_Control
+    signal wen_sig : std_logic_vector(0 downto 0); -- write enable from FIFO_WRITE_Control
+     --write address from FIFO_WRITE_Control
+    signal wr_pointer_sig : unsigned(4 downto 0); --write address from FIFO_WRITE_Control are bits (3 downto 0)
+    signal wr_pointer_sync : unsigned(4 downto 0);
 
-    --FIFO_READ_CONTROL SIGNALS
-    signal ren : std_logic; -- write enable from FIFO_READ_CONTROL
-    signal raddr : std_logic_vector(3 downto 0); --write address from FIFO_READ_CONTROL
+    --FIFO_READ_CONTROL SIGNALS.
+    signal ren_sig : std_logic;--std_logic_vector(0 downto 0); -- write enable from FIFO_READ_CONTROL
+    signal rd_pointer_sig : unsigned(4 downto 0);
+    signal rd_pointer_sync : unsigned(4 downto 0);
+
 begin
-    ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG.
-    Dual_port_memory : blk_mem_gen_0
+
+    Fifo_write_control_inst : entity work.FIFO_write_control
+    port map(
+        WCLK => WCLK_top,
+        RST => RST_top,
+        WRITE_ENABLE => WRITE_ENABLE_TOP,
+        RPTR_SYNC => rd_pointer_sync,  --rd pointer that comes from the sync
+        --FIFO_OCCU_IN => open,
+        FULL => FULL_top,
+        WPTR => wr_pointer_sig, --Write pointer goes to the sync
+        WEN => wen_sig, -- goes to block_mem via sig wen_sig in async_FIFO
+        WADDR => wr_pointer_sig(3 downto 0) -- 
+
+    );
+    
+    Dual_port_memory_inst : blk_mem_gen_0 -- vhdl-linter-disable-line not-declared
 
     port map(
-        clka => WCLK,
-        wea => wen, -- write enable from FIFO_WRITE_Control 
-        addra => waddr, -- write address from FIFO_WRITE_Control
-        dina => WRITE_DATA_IN,
-        clkb => RCLK,
-        enb => ren, -- write enable from FIFO_READ_CONTROL
-        addrb => raddr, --write address from FIFO_READ_CONTROL
-        doutb => WRITE_DATA_OUT
+        clka => WCLK_top,
+        wea => wen_sig, -- write enable from FIFO_WRITE_Control 
+        addra => std_logic_vector(wr_pointer_sig(3 downto 0)), -- write address from FIFO_WRITE_Control
+        dina => WRITE_DATA_IN_top,
+        clkb => RCLK_top,
+        enb => ren_sig, -- write enable from FIFO_READ_CONTROL
+        addrb => std_logic_vector(rd_pointer_sig(3 downto 0)), --write address from FIFO_READ_CONTROL
+        doutb => WRITE_DATA_OUT_top
+    );
+
+    Fifo_read_control_inst : entity work.FIFO_read_control -- vhdl-linter-disable-line not-declared
+    port map(
+        RCLK => RCLK_top,
+        RST => RST_top,
+        READ_ENABLE => READ_ENABLE_TOP, -- read enable from TOP
+        REN => ren_sig, -- write enable to BLOCK_MEM
+        WPTR_SYNC => wr_pointer_sync, -- to determine occupancy and empty/full. Sig from WRITE_POINTER_SYNC
+        EMPTY => EMPTY_top, --empty sig goes to TOP
+        RPTR => rd_pointer_sig,
+        RADDR => rd_pointer_sig(3 downto 0) 
+        
+    );
+
+    Write_pointer_sync_inst : entity work.write_pointer_sync
+    port map( 
+            RCLK => RCLK_top,
+            WCLK => WCLK_top,
+            --RST => RST_top,
+            WPTR => wr_pointer_sig,         
+            WRITE_POINTER_SYNC => wr_pointer_sync
+    );
+
+    Read_pointer_sync_inst : entity work.read_pointer_sync
+    port map( 
+            RCLK => RCLK_top,
+            WCLK => WCLK_top,
+           -- RST => RST_top,
+            RPTR => wr_pointer_sig,         
+            READ_POINTER_SYNC => rd_pointer_sync
     );
 
 end architecture rtl;
