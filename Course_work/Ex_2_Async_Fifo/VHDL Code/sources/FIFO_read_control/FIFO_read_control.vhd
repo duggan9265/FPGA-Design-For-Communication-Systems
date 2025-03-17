@@ -20,6 +20,8 @@ architecture rtl of FIFO_READ_CONTROL is
 
     signal rd_ptr_grey_code : unsigned(4 downto 0);
     signal rd_ptr_sig : unsigned(4 downto 0);
+    signal rd_ptr_sig_delay: unsigned(4 downto 0);
+    signal rd_ptr_sig2 : unsigned(4 downto 0);
     signal empty_sig : std_logic;
     signal rd_enable_out : std_logic;
 
@@ -32,6 +34,9 @@ begin
             rd_ptr_grey_code <= (others => '0');-- this gives multiple load error
             rd_enable_out <= '0';
             rd_ptr_sig <= (others => '0'); --this gives multiple load error
+            rd_ptr_sig_delay <= (others => '0');
+            rd_ptr_sig2 <= (others => '0');
+        
 
         elsif rising_edge(RCLK) then
 
@@ -41,17 +46,20 @@ begin
             rd_ptr_grey_code(1) <= rd_ptr_sig(2) xor (rd_ptr_sig(1));
             rd_ptr_grey_code(0) <= rd_ptr_sig(1) xor (rd_ptr_sig(0));
 
-            if READ_ENABLE(0) = '1' and empty_sig = '0' then --don't read from empty memory
-                rd_ptr_sig <= (rd_ptr_sig + 1); --unsigned so naturally wraps to 0                   
+            if READ_ENABLE(0) = '1' and empty_sig = '0' then --don't read from empty memory 
+                rd_ptr_sig_delay <= (rd_ptr_sig_delay + 1); --unsigned so naturally wraps to 0
+                rd_ptr_sig <= rd_ptr_sig_delay;
+                --rd_ptr_sig <= rd_ptr_sig2;
                 rd_enable_out <= '1';
             else
                 rd_enable_out <= '0';
             end if;
+            
         end if;
 
     end process;
 
-    empty_sig <= '1' when (rd_ptr_sig = WPTR_SYNC) else '0'; --Check if empty or not. Uses synced wr_ptr.
+    empty_sig <= '1' when (rd_ptr_sig_delay = WPTR_SYNC) else '0'; --Check if empty or not. Uses synced wr_ptr which has 5 cc delay
     RADDR <= (rd_ptr_sig(3 downto 0));
     RPTR <= rd_ptr_grey_code; -- RPTR is now in grey code.
     EMPTY <= empty_sig;

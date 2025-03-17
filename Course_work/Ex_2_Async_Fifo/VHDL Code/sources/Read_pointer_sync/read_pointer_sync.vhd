@@ -24,7 +24,7 @@ begin
         if RST = '0' then
             READ_POINTER_SYNC <= (others => '0');
             rptr_ff_1 <= (others => '0');
-            rptr_ff_1 <= (others => '0');
+            rptr_ff_2 <= (others => '0');
         
             elsif rising_edge(WCLK) then
 
@@ -34,12 +34,12 @@ begin
             -- MSB of binary is the same as MSB of gray code
             grey2binary(4) <= rptr_ff_2(4);
             -- Other bits of binary are the XOR of corresponding gray code and previous binary bit
-            grey2binary(3) <= rptr_ff_2(3) xor rptr_ff_2(4);
-            grey2binary(2) <= rptr_ff_2(2) xor rptr_ff_2(3);
-            grey2binary(1) <= rptr_ff_2(1) xor rptr_ff_2(2);
-            grey2binary(0) <= rptr_ff_2(0) xor rptr_ff_2(1);
+            grey2binary(3) <= rptr_ff_2(3) xor grey2binary(4);
+            grey2binary(2) <= rptr_ff_2(2) xor grey2binary(3);
+            grey2binary(1) <= rptr_ff_2(1) xor grey2binary(2);
+            grey2binary(0) <= rptr_ff_2(0) xor grey2binary(1);
         end if;
         READ_POINTER_SYNC <= grey2binary; -- Needs to be inside process so it happens on rising_edge of clock!
     end process;
-   -- READ_POINTER_SYNC <= grey2binary;
+   --READ_POINTER_SYNC <= grey2binary;
 end architecture rtl;
