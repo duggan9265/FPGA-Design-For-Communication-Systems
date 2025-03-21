@@ -1,4 +1,5 @@
 -- vhdl-linter-disable type-resolved component. component
+-- Author Daniel Duggan
 library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -71,7 +72,7 @@ begin
         addra => std_logic_vector(wr_addr_a), -- write address from FIFO_WRITE_Control
         dina => WRITE_DATA_IN_top,
         clkb => RCLK_top,
-        enb => ren_sig, -- write enable from FIFO_READ_CONTROL
+        enb => ren_sig, -- read enable from FIFO_READ_CONTROL
         addrb => std_logic_vector(rd_addr_b), --read address from FIFO_READ_CONTROL
         doutb => WRITE_DATA_OUT_top
     );

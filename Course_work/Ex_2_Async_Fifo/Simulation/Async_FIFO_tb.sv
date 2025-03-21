@@ -1,4 +1,5 @@
 // Testbench for Async_FIFO
+// Author Daniel Duggan
 module Async_FIFO_tb;
 
 // Signals
@@ -60,17 +61,19 @@ initial begin
     // Write to FIFO
     for (int i = 0; i < 19; i++) begin
         @(posedge WCLK_top);
+        #1;
         if (!FULL_top) begin
-            WRITE_ENABLE_TOP = 1;
-            //#5;
+            WRITE_ENABLE_TOP = 1; 
             WRITE_DATA_IN_top = predefined_data[i];
             fifo_queue.push_back(predefined_data[i]); // Store for verification
             $display("Written: %h", predefined_data[i]);
         end else begin
             WRITE_ENABLE_TOP = 0;
+            WRITE_DATA_IN_top = 8'hx;
         end
     end
     WRITE_ENABLE_TOP = 0;
+    WRITE_DATA_IN_top = 8'hx;
 
     // Small delay before reading
     #(5*CLK_PERIOD_WR);
@@ -78,6 +81,7 @@ initial begin
     // Read from FIFO
     for (int i = 0; i < 20; i++) begin
         @(posedge RCLK_top);
+        #1;
         if (!EMPTY_top) begin
             READ_ENABLE_TOP = 1;
             //#7;
