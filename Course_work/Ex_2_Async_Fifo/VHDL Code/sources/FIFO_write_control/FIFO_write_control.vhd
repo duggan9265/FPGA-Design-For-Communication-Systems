@@ -1,4 +1,5 @@
 -- vhdl-linter-disable type-resolved
+-- Author Daniel Duggan
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -21,7 +22,7 @@ architecture rtl of FIFO_WRITE_CONTROL is
     signal wr_ptr_grey_code : unsigned(4 downto 0);
     signal wr_ptr_sig : unsigned(4 downto 0);
     signal full_sig : std_logic;
-    signal write_enable_sig : std_logic_vector(0 downto 0);
+
 
 begin
 
@@ -29,8 +30,9 @@ begin
     begin
             if RST = '0' then --reset active low
                 wr_ptr_grey_code <= (others => '0');
-                write_enable_sig <= (others => '0');
                 wr_ptr_sig <= (others => '0');
+                
+
 
             
             elsif rising_edge(WCLK) then
@@ -42,21 +44,17 @@ begin
                 wr_ptr_grey_code(0) <= wr_ptr_sig(1) xor (wr_ptr_sig(0));
                 
                 if WRITE_ENABLE(0) = '1' and full_sig = '0' then --don't write to full memory
-                    wr_ptr_sig <= (wr_ptr_sig + 1); --unsigned so naturally wraps to 0
-                    write_enable_sig <= (others => '1');
-                else
-                    write_enable_sig <= (others => '0');
-
+                    wr_ptr_sig <= (wr_ptr_sig + 1);
                end if;
                WPTR <= wr_ptr_grey_code; -- WPTR is now in grey code. Sent to write_pointer_sync for sync
             end if;
     end process;
 
-    full_sig <= '1' when (wr_ptr_sig - RPTR_SYNC = 16) else '0';
+    full_sig <= '1' when (wr_ptr_sig - RPTR_SYNC = 15) else '0';
 
 
     --WPTR <= wr_ptr_grey_code; -- WPTR is now in grey code. Sent to write_pointer_sync for sync
     FULL <= full_sig;
     WADDR <= (wr_ptr_sig(3 downto 0)); -- sent to the Dual-port memory
-    WEN <= write_enable_sig; --sent to the Dual-port memory
+    WEN <=  (others =>'1') when (WRITE_ENABLE(0)='1' AND full_sig = '0') else (others => '0'); --sent to the Dual-port memory '1' when (rd_ptr_sig_delay = WPTR_SYNC) else '0';
 end architecture rtl;
